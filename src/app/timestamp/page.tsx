@@ -1,40 +1,38 @@
 import Link from "next/link";
 
-import { getArticles, getArticlesByTimestamp } from "@/firebase";
+import { Timestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import ArticleCard from "@/components/ArticleCard";
-import { Timestamp } from "firebase/firestore";
-import { redirect } from "next/navigation";
+import { getArticlesByTimestamp } from "@/firebase";
 
-export default async function TimestampApproach({
-  searchParams,
-}: {
-  searchParams?: { [key: string]: string };
-}) {
-  let seconds: number | undefined,
-    nanoseconds: number | undefined,
-    direction: "prev" | "next" | undefined;
+function parseSearchParams(searchParams?: { [key: string]: string; }) {
+  let seconds: number | undefined, nanoseconds: number | undefined, direction: "prev" | "next" | undefined;
   if (searchParams) {
     seconds = searchParams.seconds ? parseInt(searchParams.seconds) : undefined;
-    nanoseconds = searchParams.nanoseconds
-      ? parseInt(searchParams.nanoseconds)
-      : undefined;
-    direction =
-      searchParams.direction === "prev"
-        ? "prev"
-        : searchParams.direction === "next"
-        ? "next"
-        : undefined;
+    nanoseconds = searchParams.nanoseconds ? parseInt(searchParams.nanoseconds) : undefined;
+    direction = searchParams.direction === "prev" ? "prev" : searchParams.direction === "next" ? "next" : undefined;
   }
+  return {seconds, nanoseconds, direction}
+}
 
+async function fetchArticles({seconds, nanoseconds, direction}: {seconds: number | undefined, nanoseconds: number | undefined, direction: "prev" | "next" | undefined}) {
   const articles = await getArticlesByTimestamp(
     seconds && nanoseconds ? new Timestamp(seconds, nanoseconds) : undefined,
     direction
   );
 
   const firstArticleTimestamp: Timestamp | undefined = articles[0]?.createdAt;
-  const lastArticleTimestamp: Timestamp | undefined =
-    articles[articles.length - 1]?.createdAt;
+  const lastArticleTimestamp: Timestamp | undefined = articles[articles.length - 1]?.createdAt;
+
+  return { articles, firstArticleTimestamp, lastArticleTimestamp }
+}
+
+export default async function TimestampApproach({
+  searchParams,
+}: {
+  searchParams?: { [key: string]: string };
+}) {
+  const {articles, firstArticleTimestamp, lastArticleTimestamp} = await fetchArticles(parseSearchParams(searchParams))
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">

@@ -1,7 +1,8 @@
-import ArticleCard from "@/components/ArticleCard";
-import { Button } from "@/components/ui/button";
-import { articlesPerPage, getArticlesByOrdinal, getOrdinal } from "@/firebase";
 import Link from "next/link";
+
+import { Button } from "@/components/ui/button";
+import ArticleCard from "@/components/ArticleCard";
+import { articlesPerPage, getArticlesByOrdinal, getOrdinal } from "@/firebase";
 
 export default async function Home({
   searchParams,
